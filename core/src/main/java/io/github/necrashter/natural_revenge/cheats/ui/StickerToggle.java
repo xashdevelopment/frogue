@@ -291,7 +291,9 @@ public class StickerToggle extends Actor {
         @Override
         public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
             isPressed = false;
-            if (contains(x, y)) {
+            // Use hit() method to check if point is inside the actor
+            Actor actor = StickerToggle.this;
+            if (actor.hit(x, y, false) != null) {
                 toggle();
             }
         }

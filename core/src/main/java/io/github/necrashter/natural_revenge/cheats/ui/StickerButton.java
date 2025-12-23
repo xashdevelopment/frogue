@@ -6,8 +6,11 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
+
+import io.github.necrashter.natural_revenge.Main;
 
 /**
  * Sticker-styled button component with tactile, physical feel.
@@ -294,7 +297,9 @@ public class StickerButton extends Actor {
         @Override
         public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
             isPressed = false;
-            if (isEnabled && contains(x, y)) {
+            // Use hit() method to check if point is inside the actor
+            Actor actor = StickerButton.this;
+            if (isEnabled && actor.hit(x, y, false) != null) {
                 // Click complete - any additional handling can be done here
             }
         }

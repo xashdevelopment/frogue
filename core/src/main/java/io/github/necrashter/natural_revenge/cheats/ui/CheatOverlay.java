@@ -240,7 +240,8 @@ public class CheatOverlay extends Actor {
      */
     public void setVisible(boolean visible) {
         this.visible = visible;
-        stage.setVisible(visible);
+        // Stage doesn't have setVisible, so we control visibility through the stage's root actor
+        stage.getRoot().setVisible(visible);
         
         if (visible) {
             // Refresh toggle states from CheatManager

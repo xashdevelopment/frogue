@@ -196,7 +196,10 @@ public class StickerScrollPane extends Actor implements Cullable {
     
     // ==================== CULLING ====================
     
-    @Override
+    /**
+     * Set the culling area for optimization.
+     * @param cullingArea The area to cull to
+     */
     public void setCullingArea(Actor cullingArea) {
         // Not used - we handle culling ourselves
     }
@@ -223,9 +226,11 @@ public class StickerScrollPane extends Actor implements Cullable {
         
         // Draw content with clipping
         if (content != null) {
-            // Save batch state
-            float oldX = batch.getTransformMatrix().getTranslationX();
-            float oldY = batch.getTransformMatrix().getTranslationY();
+            // Save batch state - use getTranslation() with array parameter
+            float[] oldTranslation = new float[3];
+            batch.getTransformMatrix().getTranslation(oldTranslation);
+            float oldX = oldTranslation[0];
+            float oldY = oldTranslation[1];
             
             // Apply clipping transform
             batch.setTransformMatrix(batch.getTransformMatrix().cpy()

@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
+import io.github.necrashter.natural_revenge.Main;
+
 /**
  * Sticker-styled label component for text display.
  * Supports plain and accent (highlighted) variants.

@@ -27,7 +27,7 @@ import com.badlogic.gdx.utils.Queue;
 
 import io.github.necrashter.natural_revenge.ui.GameOverDialog;
 import io.github.necrashter.natural_revenge.ui.TouchPad;
-import io.github.necrashter.natural_revenge.cheats.CheatOverlay;
+import io.github.necrashter.natural_revenge.cheats.ui.CheatOverlay;
 import io.github.necrashter.natural_revenge.world.GameWorld;
 import io.github.necrashter.natural_revenge.world.GameWorldRenderer;
 import io.github.necrashter.natural_revenge.world.LowResWorldRenderer;
