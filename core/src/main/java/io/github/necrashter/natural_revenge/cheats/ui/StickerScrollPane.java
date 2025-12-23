@@ -4,7 +4,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Interpolation;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
@@ -59,6 +61,9 @@ public class StickerScrollPane extends Actor implements Cullable {
     private float horizontalScrollBarY;
     private float horizontalScrollBarWidth;
     private boolean horizontalScrollBarTouched = false;
+    
+    /** Culling area for performance optimization */
+    private Rectangle cullingArea;
     
     // ==================== CONSTRUCTORS ====================
     
@@ -200,8 +205,9 @@ public class StickerScrollPane extends Actor implements Cullable {
      * Set the culling area for optimization.
      * @param cullingArea The area to cull to
      */
-    public void setCullingArea(Actor cullingArea) {
-        // Not used - we handle culling ourselves
+    @Override
+    public void setCullingArea(Rectangle cullingArea) {
+        this.cullingArea = cullingArea;
     }
     
     // ==================== RENDERING ====================
@@ -226,11 +232,11 @@ public class StickerScrollPane extends Actor implements Cullable {
         
         // Draw content with clipping
         if (content != null) {
-            // Save batch state - use getTranslation() with array parameter
-            float[] oldTranslation = new float[3];
+            // Save batch state - use getTranslation() with Vector3 parameter
+            Vector3 oldTranslation = new Vector3();
             batch.getTransformMatrix().getTranslation(oldTranslation);
-            float oldX = oldTranslation[0];
-            float oldY = oldTranslation[1];
+            float oldX = oldTranslation.x;
+            float oldY = oldTranslation.y;
             
             // Apply clipping transform
             batch.setTransformMatrix(batch.getTransformMatrix().cpy()
