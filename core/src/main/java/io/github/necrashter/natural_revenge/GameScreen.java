@@ -27,6 +27,7 @@ import com.badlogic.gdx.utils.Queue;
 
 import io.github.necrashter.natural_revenge.ui.GameOverDialog;
 import io.github.necrashter.natural_revenge.ui.TouchPad;
+import io.github.necrashter.natural_revenge.cheats.CheatOverlay;
 import io.github.necrashter.natural_revenge.world.GameWorld;
 import io.github.necrashter.natural_revenge.world.GameWorldRenderer;
 import io.github.necrashter.natural_revenge.world.LowResWorldRenderer;
@@ -222,7 +223,7 @@ public class GameScreen implements Screen {
             }
         }
         Gdx.input.setInputProcessor(new InputMultiplexer(
-                stage, world.player.inputAdapter
+                stage, CheatOverlay.getInstance().getStage(), world.player.inputAdapter
         ));
         if (Main.isMobile()) {
             movementTouch = new TouchPad(Main.skin);
@@ -258,6 +259,18 @@ public class GameScreen implements Screen {
             menuButtonContainer.setFillParent(true);
             menuButtonContainer.pad(20).align(Align.center | Align.top);
             stage.addActor(menuButtonContainer);
+
+            TextButton cheatsButton = new TextButton("Cheats", Main.skin);
+            cheatsButton.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    CheatOverlay.getInstance().toggle();
+                }
+            });
+            Container<TextButton> cheatsButtonContainer = new Container<>(cheatsButton);
+            cheatsButtonContainer.setFillParent(true);
+            cheatsButtonContainer.pad(20).align(Align.center | Align.top).padLeft(100f);
+            stage.addActor(cheatsButtonContainer);
 
             TextButton useButton = new TextButton("USE", Main.skin);
             useButton.addListener(new ClickListener() {
@@ -389,6 +402,9 @@ public class GameScreen implements Screen {
                 showWeaponInventoryDialog();
             }
         }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.GRAVE)) {
+            CheatOverlay.getInstance().toggle();
+        }
         if (!world.player.inputAdapter.disabled) {
             getPlayerMovement(world.player.movementInput);
         } else {
@@ -429,6 +445,10 @@ public class GameScreen implements Screen {
 //        ScreenUtils.clear(1, 0, 0, 1, true);
 
         worldRenderer.render();
+
+        // Update and draw cheat overlay after game world but before main HUD
+        CheatOverlay.getInstance().act(delta);
+        CheatOverlay.getInstance().draw();
 
         stage.getViewport().apply();
         stage.draw();
