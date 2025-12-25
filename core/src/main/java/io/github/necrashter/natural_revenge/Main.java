@@ -36,6 +36,8 @@ public class Main extends Game {
     // Multiplayer
     private static GameServer gameServer;
     private static NetworkManager networkManager;
+    public static boolean isMultiplayerHost = false;
+    public static String multiplayerPlayerName = "Player";
 
     public abstract static class PostInit {
         public abstract void run(Main main);

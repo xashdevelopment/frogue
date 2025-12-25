@@ -261,6 +261,9 @@ public class ServerPlayer {
         this.modifiers.noRecoil = mods.noRecoil;
         this.modifiers.noSpread = mods.noSpread;
         this.modifiers.customHealth = mods.customHealth;
+        this.modifiers.espPlayers = mods.espPlayers;
+        this.modifiers.espMonsters = mods.espMonsters;
+        this.modifiers.espEntities = mods.espEntities;
         if (mods.customHealth > 0) {
             this.health = mods.customHealth;
         }

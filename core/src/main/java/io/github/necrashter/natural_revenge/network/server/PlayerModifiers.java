@@ -12,6 +12,11 @@ public class PlayerModifiers {
     public boolean noSpread = false;
     public float customHealth = 0;
     
+    // ESP options
+    public boolean espPlayers = false;
+    public boolean espMonsters = false;
+    public boolean espEntities = false;
+    
     public PlayerModifiers() {
     }
     
@@ -22,9 +27,13 @@ public class PlayerModifiers {
         noRecoil = false;
         noSpread = false;
         customHealth = 0;
+        espPlayers = false;
+        espMonsters = false;
+        espEntities = false;
     }
     
     public boolean hasAnyMod() {
-        return godMode || infAmmo || infJump || noRecoil || noSpread || customHealth > 0;
+        return godMode || infAmmo || infJump || noRecoil || noSpread || customHealth > 0 
+            || espPlayers || espMonsters || espEntities;
     }
 }

@@ -24,6 +24,9 @@ public class ModMenuDialog extends Dialog {
     private CheckBox infJumpCheck;
     private CheckBox noRecoilCheck;
     private CheckBox noSpreadCheck;
+    private CheckBox espPlayersCheck;
+    private CheckBox espMonstersCheck;
+    private CheckBox espEntitiesCheck;
     private TextField healthField;
     private Label statusLabel;
     
@@ -32,7 +35,7 @@ public class ModMenuDialog extends Dialog {
         this.server = server;
         
         float dialogWidth = Main.isMobile() ? 500 : 450;
-        float dialogHeight = Main.isMobile() ? 500 : 450;
+        float dialogHeight = Main.isMobile() ? 650 : 580;
         setSize(dialogWidth, dialogHeight);
         
         buildUI();
@@ -78,6 +81,18 @@ public class ModMenuDialog extends Dialog {
         
         noSpreadCheck = new CheckBox(" No Spread", Main.skin);
         content.add(noSpreadCheck).left().padBottom(10).row();
+        
+        // ESP options
+        content.add(new Label("-- ESP Options --", Main.skin)).padBottom(5).row();
+        
+        espPlayersCheck = new CheckBox(" ESP Players", Main.skin);
+        content.add(espPlayersCheck).left().padBottom(5).row();
+        
+        espMonstersCheck = new CheckBox(" ESP Monsters", Main.skin);
+        content.add(espMonstersCheck).left().padBottom(5).row();
+        
+        espEntitiesCheck = new CheckBox(" ESP All Entities", Main.skin);
+        content.add(espEntitiesCheck).left().padBottom(10).row();
         
         // Health setting
         Table healthRow = new Table();
@@ -157,6 +172,9 @@ public class ModMenuDialog extends Dialog {
         mods.infJump = infJumpCheck.isChecked();
         mods.noRecoil = noRecoilCheck.isChecked();
         mods.noSpread = noSpreadCheck.isChecked();
+        mods.espPlayers = espPlayersCheck.isChecked();
+        mods.espMonsters = espMonstersCheck.isChecked();
+        mods.espEntities = espEntitiesCheck.isChecked();
         
         // Set health
         try {
@@ -191,12 +209,18 @@ public class ModMenuDialog extends Dialog {
             infJumpCheck.setChecked(mods.infJump);
             noRecoilCheck.setChecked(mods.noRecoil);
             noSpreadCheck.setChecked(mods.noSpread);
+            espPlayersCheck.setChecked(mods.espPlayers);
+            espMonstersCheck.setChecked(mods.espMonsters);
+            espEntitiesCheck.setChecked(mods.espEntities);
         } else {
             godmodeCheck.setChecked(false);
             infAmmoCheck.setChecked(false);
             infJumpCheck.setChecked(false);
             noRecoilCheck.setChecked(false);
             noSpreadCheck.setChecked(false);
+            espPlayersCheck.setChecked(false);
+            espMonstersCheck.setChecked(false);
+            espEntitiesCheck.setChecked(false);
         }
         
         healthField.setText(String.valueOf((int) player.getHealth()));

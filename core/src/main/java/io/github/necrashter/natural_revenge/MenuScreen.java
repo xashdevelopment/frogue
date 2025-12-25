@@ -124,12 +124,22 @@ public class MenuScreen implements Screen {
     }
 
     private void startMultiplayerHost(String playerName, int port, String password, int maxPlayers, int gameMode) {
-        // TODO: Implement server hosting with MultiplayerGameScreen
-        // For now, show a placeholder message
-        Dialog dialog = new Dialog("Host Server", Main.skin);
-        dialog.text("Server hosting will start on port " + port + "\nGame Mode: " + gameMode);
-        dialog.button("OK");
-        dialog.show(stage);
+        // Start the server
+        Main.startServer(port, String.valueOf(gameMode), maxPlayers);
+        
+        if (Main.getGameServer() != null) {
+            // Server started successfully - launch the game as host
+            Main.isMultiplayerHost = true;
+            Main.multiplayerPlayerName = playerName;
+            game.setScreen(game.getLevel(1, 1.0f)); // Start level 1
+            dispose();
+        } else {
+            // Server failed to start
+            Dialog dialog = new Dialog("Error", Main.skin);
+            dialog.text("Failed to start server on port " + port);
+            dialog.button("OK");
+            dialog.show(stage);
+        }
     }
 
     private void startMultiplayerClient(String playerName, String host, int port, String password) {
