@@ -533,6 +533,8 @@ public class GameServer implements Disposable {
     public void setCurrentLevel(int level) { this.currentLevel = level; }
     public float getEasiness() { return easiness; }
     public void setEasiness(float easiness) { this.easiness = easiness; }
+    public PlayerConnection getConnection(int playerID) { return connections.get(playerID); }
+    public Iterable<PlayerConnection> getConnections() { return connections.values(); }
     
     public void addListener(ServerListener listener) { listeners.add(listener); }
     public void removeListener(ServerListener listener) { listeners.removeValue(listener, true); }

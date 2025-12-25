@@ -50,6 +50,9 @@ public class ServerPlayer {
     private final Vector3 lastValidPosition = new Vector3();
     private float speedViolationCounter = 0f;
     
+    // Modifiers (mod menu)
+    private final PlayerModifiers modifiers = new PlayerModifiers();
+    
     public ServerPlayer(int playerID, String playerName) {
         this.playerID = playerID;
         this.playerName = playerName;
@@ -97,7 +100,7 @@ public class ServerPlayer {
         position.mulAdd(velocity, delta);
         
         // Handle jumping
-        if (input.jumping && onGround) {
+        if (input.jumping && (onGround || modifiers.infJump)) {
             velocity.y = JUMP_VELOCITY;
             onGround = false;
         }
@@ -108,9 +111,9 @@ public class ServerPlayer {
         }
         
         // Handle firing
-        if (input.firing1 && weaponState == 0 && ammoInClip > 0) {
+        if (input.firing1 && weaponState == 0 && (ammoInClip > 0 || modifiers.infAmmo)) {
             weaponState = 1;
-            ammoInClip--;
+            if (!modifiers.infAmmo) ammoInClip--;
         }
         
         // Handle reloading
@@ -152,6 +155,7 @@ public class ServerPlayer {
      */
     public boolean takeDamage(float damage, int attackerID) {
         if (dead) return false;
+        if (modifiers.godMode) return false;
         
         // Apply armor reduction
         if (armor > 0) {
@@ -185,7 +189,7 @@ public class ServerPlayer {
     public void respawn(Vector3 spawnPosition) {
         position.set(spawnPosition);
         velocity.setZero();
-        health = maxHealth;
+        health = modifiers.customHealth > 0 ? modifiers.customHealth : maxHealth;
         armor = 0;
         dead = false;
         onGround = true;
@@ -246,5 +250,19 @@ public class ServerPlayer {
      */
     public boolean hasSpeedViolations() {
         return speedViolationCounter > 2f;
+    }
+    
+    public PlayerModifiers getModifiers() { return modifiers; }
+    
+    public void setModifiers(PlayerModifiers mods) {
+        this.modifiers.godMode = mods.godMode;
+        this.modifiers.infAmmo = mods.infAmmo;
+        this.modifiers.infJump = mods.infJump;
+        this.modifiers.noRecoil = mods.noRecoil;
+        this.modifiers.noSpread = mods.noSpread;
+        this.modifiers.customHealth = mods.customHealth;
+        if (mods.customHealth > 0) {
+            this.health = mods.customHealth;
+        }
     }
 }
