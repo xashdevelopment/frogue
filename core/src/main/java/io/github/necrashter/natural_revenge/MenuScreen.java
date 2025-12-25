@@ -16,6 +16,7 @@ import io.github.necrashter.natural_revenge.world.GameWorld;
 import io.github.necrashter.natural_revenge.world.GameWorldRenderer;
 import io.github.necrashter.natural_revenge.world.LowResWorldRenderer;
 import io.github.necrashter.natural_revenge.world.levels.LevelMenuBg;
+import io.github.necrashter.natural_revenge.ui.multiplayer.MultiplayerMenuDialog;
 
 public class MenuScreen implements Screen {
     final Main game;
@@ -43,6 +44,14 @@ public class MenuScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 levelSelectDialog();
+            }
+        });
+
+        final TextButton multiplayerButton = new TextButton("Multiplayer", Main.skin);
+        multiplayerButton.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showMultiplayerMenu();
             }
         });
 
@@ -75,6 +84,8 @@ public class MenuScreen implements Screen {
         table.row().padTop(10);
         table.add(levelSelect);
         table.row().padTop(10);
+        table.add(multiplayerButton);
+        table.row().padTop(10);
         table.add(optionsButton);
         table.row().padTop(10);
         table.add(exit);
@@ -89,6 +100,45 @@ public class MenuScreen implements Screen {
     public void startLevel(int level) {
         game.setScreen(game.getLevel(level, 1.0f));
         dispose();
+    }
+
+    public void showMultiplayerMenu() {
+        new MultiplayerMenuDialog(stage, new MultiplayerMenuDialog.MultiplayerMenuListener() {
+            @Override
+            public void onHostServer(String playerName, int port, String password, int maxPlayers, int gameMode) {
+                // Start hosting a server
+                startMultiplayerHost(playerName, port, password, maxPlayers, gameMode);
+            }
+
+            @Override
+            public void onJoinServer(String playerName, String host, int port, String password) {
+                // Join an existing server
+                startMultiplayerClient(playerName, host, port, password);
+            }
+
+            @Override
+            public void onCancel() {
+                // Do nothing
+            }
+        }).show(stage);
+    }
+
+    private void startMultiplayerHost(String playerName, int port, String password, int maxPlayers, int gameMode) {
+        // TODO: Implement server hosting with MultiplayerGameScreen
+        // For now, show a placeholder message
+        Dialog dialog = new Dialog("Host Server", Main.skin);
+        dialog.text("Server hosting will start on port " + port + "\nGame Mode: " + gameMode);
+        dialog.button("OK");
+        dialog.show(stage);
+    }
+
+    private void startMultiplayerClient(String playerName, String host, int port, String password) {
+        // TODO: Implement client connection with MultiplayerGameScreen
+        // For now, show a placeholder message
+        Dialog dialog = new Dialog("Join Server", Main.skin);
+        dialog.text("Connecting to " + host + ":" + port + "\nas " + playerName);
+        dialog.button("OK");
+        dialog.show(stage);
     }
 
     public void levelSelectDialog() {

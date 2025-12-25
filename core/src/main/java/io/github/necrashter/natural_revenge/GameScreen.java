@@ -33,6 +33,10 @@ import io.github.necrashter.natural_revenge.world.LowResWorldRenderer;
 import io.github.necrashter.natural_revenge.world.levels.ScriptedEvent;
 import io.github.necrashter.natural_revenge.world.player.PlayerWeapon;
 import io.github.necrashter.natural_revenge.world.player.Firearm;
+import io.github.necrashter.natural_revenge.network.NetworkManager;
+import io.github.necrashter.natural_revenge.network.client.ClientNetworkHandler;
+import io.github.necrashter.natural_revenge.ui.multiplayer.ChatPanel;
+import io.github.necrashter.natural_revenge.ui.multiplayer.ScoreboardWidget;
 
 public class GameScreen implements Screen {
     public static final float CROSSHAIR_SIZE = 48f;
@@ -62,10 +66,29 @@ public class GameScreen implements Screen {
 
     public TouchPad movementTouch;
 
+    // Multiplayer components
+    private NetworkManager networkManager;
+    private ScoreboardWidget scoreboardWidget;
+    private ChatPanel chatPanel;
+    private ClientNetworkHandler networkHandler;
+
     public GameScreen(final Main game, final GameWorld world) {
+        this(game, world, null);
+    }
+
+    public GameScreen(final Main game, final GameWorld world, NetworkManager networkManager) {
         this.game = game;
+        this.networkManager = networkManager;
 
         this.world = world;
+        if (networkManager != null) {
+            world.networkManager = networkManager;
+            world.isMultiplayer = true;
+            
+            // Create and register network handler
+            networkHandler = new ClientNetworkHandler(world, world.player);
+            networkManager.addListener(networkHandler);
+        }
         world.screen = this;
         worldRenderer = new LowResWorldRenderer(world);
 //        worldRenderer = world;
@@ -318,6 +341,51 @@ public class GameScreen implements Screen {
         }
         setPaused(false);
 
+        // Initialize multiplayer UI components
+        if (networkManager != null) {
+            scoreboardWidget = new ScoreboardWidget();
+            scoreboardWidget.setVisible(false);
+            stage.addActor(scoreboardWidget);
+
+            chatPanel = new ChatPanel();
+            chatPanel.setPosition(10, 200);
+            stage.addActor(chatPanel);
+            
+            // Connect chat panel to network handler
+            if (networkHandler != null) {
+                networkHandler.setChatPanel(chatPanel);
+            }
+            
+            // Add mobile-specific multiplayer controls
+            if (Main.isMobile()) {
+                // Scoreboard button
+                TextButton scoreButton = new TextButton("SCORE", Main.skin);
+                scoreButton.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        scoreboardWidget.setVisible(!scoreboardWidget.isVisible());
+                    }
+                });
+                Container<TextButton> scoreButtonContainer = new Container<>(scoreButton);
+                scoreButtonContainer.setFillParent(true);
+                scoreButtonContainer.pad(20).align(Align.topLeft).padTop(60);
+                stage.addActor(scoreButtonContainer);
+                
+                // Chat button
+                TextButton chatButton = new TextButton("CHAT", Main.skin);
+                chatButton.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        chatPanel.toggle();
+                    }
+                });
+                Container<TextButton> chatButtonContainer = new Container<>(chatButton);
+                chatButtonContainer.setFillParent(true);
+                chatButtonContainer.pad(20).align(Align.topLeft).padTop(110);
+                stage.addActor(chatButtonContainer);
+            }
+        }
+
         world.addedToScreen();
     }
 
@@ -385,6 +453,8 @@ public class GameScreen implements Screen {
         if (Gdx.input.isKeyJustPressed(Input.Keys.TAB)) {
             if (currentDialog != null) {
                 currentDialog.hide();
+            } else if (networkManager != null && scoreboardWidget != null) {
+                scoreboardWidget.setVisible(!scoreboardWidget.isVisible());
             } else {
                 showWeaponInventoryDialog();
             }
@@ -515,6 +585,13 @@ public class GameScreen implements Screen {
 
     @Override
     public void dispose() {
+        // Clean up network resources
+        if (networkManager != null) {
+            if (networkHandler != null) {
+                networkManager.removeListener(networkHandler);
+            }
+            networkManager.disconnect("Game screen closed");
+        }
         // World renderer is supposed to dispose world as well.
         worldRenderer.dispose();
         stage.dispose();

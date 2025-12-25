@@ -23,6 +23,10 @@ import io.github.necrashter.natural_revenge.world.objects.FrogParticle;
 import io.github.necrashter.natural_revenge.world.objects.TreeObject;
 import io.github.necrashter.natural_revenge.world.player.Player;
 import io.github.necrashter.natural_revenge.world.player.Statistics;
+import io.github.necrashter.natural_revenge.network.NetworkManager;
+import io.github.necrashter.natural_revenge.network.client.RemotePlayer;
+import java.util.HashMap;
+import java.util.Map;
 
 public class GameWorld implements GameWorldRenderer {
     public final Main game;
@@ -51,6 +55,13 @@ public class GameWorld implements GameWorldRenderer {
     public final Statistics statistics = new Statistics();
 
     public final float easiness;
+
+    // Multiplayer support
+    public boolean isMultiplayer = false;
+    public boolean isServer = false;
+    public int localPlayerID = -1;
+    public final Map<Integer, RemotePlayer> remotePlayers = new HashMap<>();
+    public NetworkManager networkManager;
 
     public GameWorld(final Main game, int level, float easiness) {
         this.game = game;
@@ -123,6 +134,13 @@ public class GameWorld implements GameWorldRenderer {
             statistics.updateRecorders();
             statTimer -= STAT_PERIOD;
         }
+        
+        // Update remote players in multiplayer mode
+        if (isMultiplayer) {
+            for (RemotePlayer remotePlayer : remotePlayers.values()) {
+                remotePlayer.update(dt);
+            }
+        }
     }
 
     public void update(float delta) {
@@ -153,6 +171,14 @@ public class GameWorld implements GameWorldRenderer {
 
         octree.render(this);
         octree.renderEntities(this);
+        
+        // Render remote players in multiplayer
+        if (isMultiplayer) {
+            for (RemotePlayer remotePlayer : remotePlayers.values()) {
+                remotePlayer.render(this);
+            }
+        }
+        
         terrain.render(cam, modelBatch.getRenderContext());
         decalPool.render(this);
         modelBatch.end();
@@ -241,6 +267,66 @@ public class GameWorld implements GameWorldRenderer {
         terrain.dispose();
         decalBatch.dispose();
         modelBatch.dispose();
+        remotePlayers.clear();
+    }
+
+    // Multiplayer methods
+    
+    /**
+     * Add a remote player to the world
+     */
+    public void addRemotePlayer(int playerID, String playerName) {
+        if (playerID == localPlayerID) return; // Don't add self
+        
+        RemotePlayer remotePlayer = new RemotePlayer(this, playerID, playerName);
+        remotePlayers.put(playerID, remotePlayer);
+        octree.add(remotePlayer);
+    }
+    
+    /**
+     * Remove a remote player from the world
+     */
+    public void removeRemotePlayer(int playerID) {
+        RemotePlayer remotePlayer = remotePlayers.remove(playerID);
+        if (remotePlayer != null) {
+            octree.remove(remotePlayer);
+        }
+    }
+    
+    /**
+     * Get a remote player by ID
+     */
+    public RemotePlayer getRemotePlayer(int playerID) {
+        return remotePlayers.get(playerID);
+    }
+    
+    /**
+     * Initialize multiplayer mode
+     */
+    public void initMultiplayer(int localPlayerID, boolean isServer) {
+        this.isMultiplayer = true;
+        this.isServer = isServer;
+        this.localPlayerID = localPlayerID;
+    }
+    
+    /**
+     * Update a remote player's position from server data
+     */
+    public void updateRemotePlayerPosition(io.github.necrashter.natural_revenge.network.messages.PlayerMessages.PlayerPositionUpdate update) {
+        RemotePlayer remotePlayer = remotePlayers.get(update.playerID);
+        if (remotePlayer != null) {
+            remotePlayer.receivePositionUpdate(update);
+        }
+    }
+    
+    /**
+     * Clear all remote players
+     */
+    public void clearRemotePlayers() {
+        for (RemotePlayer rp : remotePlayers.values()) {
+            rp.dispose();
+        }
+        remotePlayers.clear();
     }
 
     /* Sounds */

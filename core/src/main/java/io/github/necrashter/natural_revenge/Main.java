@@ -16,6 +16,8 @@ import io.github.necrashter.natural_revenge.world.levels.Level2Flying;
 import io.github.necrashter.natural_revenge.world.levels.LevelBossRush;
 import io.github.necrashter.natural_revenge.world.player.EnumeratingRoller;
 import io.github.necrashter.natural_revenge.world.player.RandomRoller;
+import io.github.necrashter.natural_revenge.network.NetworkManager;
+import io.github.necrashter.natural_revenge.network.server.GameServer;
 
 public class Main extends Game {
     public static boolean debugMode = false;
@@ -30,6 +32,10 @@ public class Main extends Game {
     private final PostInit postInit;
     public static Skin skin;
     public static Skin skin2;
+
+    // Multiplayer
+    private static GameServer gameServer;
+    private static NetworkManager networkManager;
 
     public abstract static class PostInit {
         public abstract void run(Main main);
@@ -121,6 +127,49 @@ public class Main extends Game {
             case 2: return new GameScreen(this, new Level2Flying(this, 2, easiness));
             case 3: return new GameScreen(this, new LevelBossRush(this, 3, easiness));
             default: return new MenuScreen(this);
+        }
+    }
+
+    // Multiplayer methods
+    public static void startServer(int port, String gameMode, int maxPlayers) {
+        if (gameServer != null) {
+            gameServer.stop();
+        }
+        io.github.necrashter.natural_revenge.network.NetworkConfig config = new io.github.necrashter.natural_revenge.network.NetworkConfig();
+        config.serverPort = port;
+        config.maxPlayers = maxPlayers;
+        gameServer = new GameServer(config);
+        try {
+            gameServer.start();
+        } catch (java.io.IOException e) {
+            Gdx.app.error("Main", "Failed to start server", e);
+            gameServer = null;
+        }
+    }
+
+    public static void stopServer() {
+        if (gameServer != null) {
+            gameServer.stop();
+            gameServer = null;
+        }
+    }
+
+    public static GameServer getGameServer() {
+        return gameServer;
+    }
+
+    public static NetworkManager getNetworkManager() {
+        return networkManager;
+    }
+
+    public static void setNetworkManager(NetworkManager manager) {
+        networkManager = manager;
+    }
+
+    public static void disconnectFromServer() {
+        if (networkManager != null) {
+            networkManager.disconnect("User disconnected");
+            networkManager = null;
         }
     }
 

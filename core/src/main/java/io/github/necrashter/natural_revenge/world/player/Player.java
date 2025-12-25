@@ -19,6 +19,11 @@ import io.github.necrashter.natural_revenge.world.GameWorld;
 import io.github.necrashter.natural_revenge.Main;
 import io.github.necrashter.natural_revenge.world.geom.RayIntersection;
 import io.github.necrashter.natural_revenge.world.objects.RandomGunPickup;
+import io.github.necrashter.natural_revenge.network.InputSnapshot;
+import io.github.necrashter.natural_revenge.network.NetworkManager;
+import io.github.necrashter.natural_revenge.network.client.PredictionManager;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 public class Player extends GameEntity {
 
@@ -204,6 +209,17 @@ public class Player extends GameEntity {
     public boolean firing2 = false;
     public boolean shouldReload = false;
 
+    // Multiplayer support
+    public boolean isLocalPlayer = true;
+    public int playerID = -1;
+    public String playerName = "Player";
+    public Deque<InputSnapshot> inputHistory = new ArrayDeque<>();
+    public long lastNetworkUpdate = 0;
+    public int serverTick = 0;
+    public PredictionManager predictionManager;
+    private float networkSendTimer = 0;
+    private static final float NETWORK_SEND_RATE = 1.0f / 30.0f; // 30 Hz
+
     public Player(final GameWorld world) {
         super(world, PLAYER_HEIGHT, PLAYER_HEIGHT/4.0f);
         camera = world.cam;
@@ -256,6 +272,11 @@ public class Player extends GameEntity {
 
     @Override
     public void update(float delta) {
+        // Skip update for remote players - they are updated via network
+        if (!isLocalPlayer) {
+            return;
+        }
+        
         if (!inputAdapter.disabled) inputAdapter.update(delta);
         aim = getAim();
         aimIntersection.set(world.intersectRay(aim, this));
@@ -268,6 +289,11 @@ public class Player extends GameEntity {
         movement.set(movementInput.x * forward.x + movementInput.y * tmpV1.x, 0, movementInput.x * forward.z + movementInput.y * tmpV1.z);
         if (movement.len2() > 1) movement.nor();
         movement.scl(activeWeapon != null ? (movementSpeed * activeWeapon.speedMod) : (movementSpeed*1.75f));
+
+        // Send input to server in multiplayer mode
+        if (world.isMultiplayer && !world.isServer) {
+            sendInputToServer(delta);
+        }
 
         super.update(delta);
 
@@ -288,6 +314,42 @@ public class Player extends GameEntity {
         }
         pitch = Math.min(90f, pitch + pitchMod * pitchMod * 20f * delta);
         pitchMod = Math.max(.0f, pitchMod - 10.f * pitchMod * delta);
+    }
+    
+    /**
+     * Send current input state to server
+     */
+    private void sendInputToServer(float delta) {
+        networkSendTimer += delta;
+        if (networkSendTimer < NETWORK_SEND_RATE) return;
+        networkSendTimer = 0;
+        
+        NetworkManager netManager = NetworkManager.getInstance();
+        if (netManager == null || netManager.getState() != NetworkManager.ConnectionState.CONNECTED) {
+            return;
+        }
+        
+        InputSnapshot snapshot = new InputSnapshot();
+        snapshot.sequenceNumber = netManager.getNextInputSequence();
+        snapshot.timestamp = System.currentTimeMillis();
+        snapshot.movementInput.set(movementInput);
+        snapshot.forward.set(forward);
+        snapshot.pitch = pitch;
+        snapshot.yaw = (float) Math.atan2(forward.z, forward.x);
+        snapshot.jumping = hitBox.velocity.y > 0 && !hitBox.onGround;
+        snapshot.firing1 = firing1;
+        snapshot.firing2 = firing2;
+        snapshot.reloading = shouldReload;
+        snapshot.selectedWeapon = activeWeaponIndex;
+        
+        // Store for prediction reconciliation
+        inputHistory.addLast(snapshot);
+        while (inputHistory.size() > 60) { // Keep ~1 second of history
+            inputHistory.removeFirst();
+        }
+        
+        // Send to server
+        netManager.sendInput(snapshot);
     }
 
     public void renderViewModel(GameWorld world) {
