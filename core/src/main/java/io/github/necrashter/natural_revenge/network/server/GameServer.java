@@ -476,6 +476,12 @@ public class GameServer implements Disposable {
                 try {
                     querySocket.receive(packet);
                     
+                    // Check for query request
+                    String query = new String(packet.getData(), 0, packet.getLength()).trim();
+                    if (!query.equals("FROGUE_QUERY")) {
+                        continue;
+                    }
+                    
                     // Create query response
                     ServerQueryResponse response = new ServerQueryResponse();
                     response.serverName = serverName;
@@ -485,6 +491,7 @@ public class GameServer implements Disposable {
                     response.gameMode = gameMode != null ? gameMode.getModeName() : "Cooperative";
                     response.version = NetworkConfig.PROTOCOL_VERSION;
                     response.passwordProtected = config.serverPassword != null;
+                    response.timestamp = System.currentTimeMillis();
                     
                     // Send response
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();

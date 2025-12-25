@@ -131,7 +131,7 @@ public class MenuScreen implements Screen {
             // Server started successfully - launch the game as host
             Main.isMultiplayerHost = true;
             Main.multiplayerPlayerName = playerName;
-            game.setScreen(game.getLevel(1, 1.0f)); // Start level 1
+            game.setScreen(game.getLevel(1, 1.0f, true, true)); // Start level 1 as multiplayer host
             dispose();
         } else {
             // Server failed to start
@@ -143,12 +143,39 @@ public class MenuScreen implements Screen {
     }
 
     private void startMultiplayerClient(String playerName, String host, int port, String password) {
-        // TODO: Implement client connection with MultiplayerGameScreen
-        // For now, show a placeholder message
-        Dialog dialog = new Dialog("Join Server", Main.skin);
-        dialog.text("Connecting to " + host + ":" + port + "\nas " + playerName);
-        dialog.button("OK");
-        dialog.show(stage);
+        // Show connecting dialog
+        final Dialog connectingDialog = new Dialog("Connecting...", Main.skin);
+        connectingDialog.text("Connecting to " + host + ":" + port);
+        connectingDialog.show(stage);
+        
+        // Get NetworkManager and connect
+        io.github.necrashter.natural_revenge.network.NetworkManager netManager = 
+            io.github.necrashter.natural_revenge.network.NetworkManager.getInstance();
+        
+        // Add listener for connection result
+        netManager.addListener(new io.github.necrashter.natural_revenge.network.NetworkManager.NetworkListenerAdapter() {
+            @Override
+            public void onConnected(io.github.necrashter.natural_revenge.network.messages.ConnectionMessages.ClientConnectResponse response) {
+                connectingDialog.hide();
+                Main.isMultiplayerHost = false;
+                Main.multiplayerPlayerName = playerName;
+                Main.setNetworkManager(netManager);
+                game.setScreen(game.getLevel(response.currentLevel, response.easiness, true, false));
+                dispose();
+            }
+            
+            @Override
+            public void onConnectionFailed(String reason) {
+                connectingDialog.hide();
+                Dialog error = new Dialog("Connection Failed", Main.skin);
+                error.text("Could not connect to server:\n" + reason);
+                error.button("OK");
+                error.show(stage);
+            }
+        });
+        
+        // Start connection
+        netManager.connect(host, port, playerName, password);
     }
 
     public void levelSelectDialog() {

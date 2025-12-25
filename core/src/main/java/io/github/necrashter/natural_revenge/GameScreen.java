@@ -37,6 +37,8 @@ import io.github.necrashter.natural_revenge.network.NetworkManager;
 import io.github.necrashter.natural_revenge.network.client.ClientNetworkHandler;
 import io.github.necrashter.natural_revenge.ui.multiplayer.ChatPanel;
 import io.github.necrashter.natural_revenge.ui.multiplayer.ScoreboardWidget;
+import io.github.necrashter.natural_revenge.ui.multiplayer.ModMenuDialog;
+import io.github.necrashter.natural_revenge.network.server.GameServer;
 
 public class GameScreen implements Screen {
     public static final float CROSSHAIR_SIZE = 48f;
@@ -56,6 +58,10 @@ public class GameScreen implements Screen {
 
     private final WidgetGroup subtitleGroup;
     private final Label subtitleLabel;
+    
+    // Multiplayer mode indicator
+    private Label modeIndicatorLabel;
+    private TextButton modMenuButton;
 
     private final Dialog pauseDialog;
     private Dialog currentDialog = null;
@@ -137,6 +143,15 @@ public class GameScreen implements Screen {
             crosshairContainer.setFillParent(true);
             crosshairContainer.size(CROSSHAIR_SIZE).center();
             hudGroup.addActor(crosshairContainer);
+
+            // Multiplayer mode indicator (top center)
+            modeIndicatorLabel = new Label("", Main.skin);
+            modeIndicatorLabel.setColor(Color.GREEN);
+            Container<Label> modeContainer = new Container<>(modeIndicatorLabel);
+            modeContainer.setFillParent(true);
+            modeContainer.top().padTop(10);
+            hudGroup.addActor(modeContainer);
+            updateModeIndicator();
 
             stage.addActor(hudGroup);
         }
@@ -231,6 +246,22 @@ public class GameScreen implements Screen {
                     }
                 });
                 pauseDialog.getButtonTable().add(button).height(button.getHeight()).width(button.getWidth()).row();
+            }
+
+            // Mod Menu button (only visible for server hosts)
+            {
+                modMenuButton = new TextButton("Mod Menu", Main.skin);
+                modMenuButton.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        GameServer server = Main.getGameServer();
+                        if (server != null && server.isRunning()) {
+                            new ModMenuDialog(stage, server).show(stage);
+                        }
+                    }
+                });
+                modMenuButton.setVisible(false); // Hidden by default
+                pauseDialog.getButtonTable().add(modMenuButton).height(modMenuButton.getHeight()).width(modMenuButton.getWidth()).row();
             }
 
             {
@@ -535,8 +566,28 @@ public class GameScreen implements Screen {
 
     public void togglePause() {
         setPaused(!world.paused);
-        if (world.paused) pauseDialog.show(stage);
-        else pauseDialog.hide();
+        if (world.paused) {
+            // Update mod menu visibility based on host status
+            GameServer server = Main.getGameServer();
+            modMenuButton.setVisible(server != null && server.isRunning() && Main.isMultiplayerHost);
+            pauseDialog.show(stage);
+        } else {
+            pauseDialog.hide();
+        }
+    }
+    
+    private void updateModeIndicator() {
+        if (world.isMultiplayer) {
+            if (Main.isMultiplayerHost) {
+                modeIndicatorLabel.setText("● HOST");
+                modeIndicatorLabel.setColor(Color.GREEN);
+            } else {
+                modeIndicatorLabel.setText("● CLIENT");
+                modeIndicatorLabel.setColor(Color.CYAN);
+            }
+        } else {
+            modeIndicatorLabel.setText(""); // Hide in singleplayer
+        }
     }
 
     @Override

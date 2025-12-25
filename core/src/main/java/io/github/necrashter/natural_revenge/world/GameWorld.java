@@ -144,7 +144,8 @@ public class GameWorld implements GameWorldRenderer {
     }
 
     public void update(float delta) {
-        if (paused) return;
+        // In multiplayer, game continues running even when menu is open
+        if (paused && !isMultiplayer) return;
         delta = Math.min(DELTA_LIMIT, delta);
         accumulatedDelta += delta;
         while (accumulatedDelta > MIN_DELTA) {

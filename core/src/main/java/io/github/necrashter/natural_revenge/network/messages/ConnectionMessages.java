@@ -124,7 +124,8 @@ public class ConnectionMessages {
     /**
      * Server query response
      */
-    public static class ServerQueryResponse extends NetworkMessage {
+    public static class ServerQueryResponse extends NetworkMessage implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
         public String serverName;
         public int currentPlayers;
         public int maxPlayers;
@@ -133,9 +134,11 @@ public class ConnectionMessages {
         public int ping;
         public String version;
         public boolean passwordProtected;
+        public long timestamp;
         
         public ServerQueryResponse() {
             priority = MessagePriority.LOW;
+            timestamp = System.currentTimeMillis();
         }
     }
 }

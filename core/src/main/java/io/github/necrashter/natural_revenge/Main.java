@@ -18,6 +18,7 @@ import io.github.necrashter.natural_revenge.world.player.EnumeratingRoller;
 import io.github.necrashter.natural_revenge.world.player.RandomRoller;
 import io.github.necrashter.natural_revenge.network.NetworkManager;
 import io.github.necrashter.natural_revenge.network.server.GameServer;
+import io.github.necrashter.natural_revenge.world.GameWorld;
 
 public class Main extends Game {
     public static boolean debugMode = false;
@@ -124,12 +125,20 @@ public class Main extends Game {
     }
 
     public Screen getLevel(int level, float easiness) {
+        return getLevel(level, easiness, false, false);
+    }
+    
+    public Screen getLevel(int level, float easiness, boolean isMultiplayer, boolean isServer) {
+        GameWorld world;
         switch (level) {
-            case 1: return new GameScreen(this, new Level1Swamp(this, 1, easiness));
-            case 2: return new GameScreen(this, new Level2Flying(this, 2, easiness));
-            case 3: return new GameScreen(this, new LevelBossRush(this, 3, easiness));
+            case 1: world = new Level1Swamp(this, 1, easiness); break;
+            case 2: world = new Level2Flying(this, 2, easiness); break;
+            case 3: world = new LevelBossRush(this, 3, easiness); break;
             default: return new MenuScreen(this);
         }
+        world.isMultiplayer = isMultiplayer;
+        world.isServer = isServer;
+        return new GameScreen(this, world);
     }
 
     // Multiplayer methods
